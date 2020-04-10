@@ -6,23 +6,26 @@ import (
 	"net/http"
 	"time"
 	"encoding/json"
-	// "log"
+	"log"
+	
+	//"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"github.com/gorilla/mux"
 )
 
 
-// Define models
-type Person struct{
-	ID 			primitive.ObjectID	    `json:"_id,"pmitempty" bson:"_id,omitempty"`
-	Firstname 	string 					`json:"firstname, omitempty" "bsona;"firstname, omitempty"`
-	Lastname 	string 					`json:"lastname, omitempty" "bsona;"lastname, omitempty"`
-}
 
 
 var client *mongo.Client
+
+type Person struct {
+	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Firstname string             `json:"firstname,omitempty" bson:"firstname,omitempty"`
+	Lastname  string             `json:"lastname,omitempty" bson:"lastname,omitempty"`
+}
+
 
 
 
@@ -41,14 +44,16 @@ func CreatePersonEndpoint(response http.ResponseWriter, request *http.Request) {
 
 
 func main() {
-	fmt.Println("Starting the application")
+	fmt.Println("Starting the application....#######")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	client, _ = mongo.Connect(ctx, "mongodb://localhost:27017")
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, _ = mongo.Connect(ctx, clientOptions)
 	router := mux.NewRouter()
 
 	router.HandleFunc("/person", CreatePersonEndpoint).Methods("POST")
 
 
-	http.ListenAndServe(":5000", router)
+	//setting port addres
+	log.Fatal(http.ListenAndServe(":5000", router))
 
 }
