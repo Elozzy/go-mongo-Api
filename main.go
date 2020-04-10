@@ -17,7 +17,7 @@ import (
 
 
 
-
+//DataBase Name = Village
 var client *mongo.Client
 
 type Person struct {
@@ -27,22 +27,20 @@ type Person struct {
 }
 
 
-
-
-
-
 //GetRequest
 func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var people []Person
-	collection := client.Database("thepolyglotdeveloper").Collection("people")
-	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	collection := client.Database("villagepeople").Collection("people")
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cursor, err := collection.Find(ctx, bson.M{})
+
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
 		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
+
 	defer cursor.Close(ctx)
 	for cursor.Next(ctx) {
 		var person Person
