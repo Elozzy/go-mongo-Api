@@ -30,9 +30,9 @@ type Person struct {
 
 
 //delete person
-// func DeletePersonEndpoint(response http.ResponseWriter, request *http.Request) {
-// 	response.Header().Set("Content-Type", "application/json")
-// 	params := mux.Vars(request)
+// func DeletePersonEndpoint(w http.ResponseWriter, r *http.Request) {
+// 	w.Header().Set("Content-Type", "application/json")
+// 	params := mux.Vars(r)
 // 	id, _ := primitive.ObjectIDFromHex(params["id"])
 // 	var person Person
 // 	collection := client.Database("villagepeople").Collection("people")
@@ -43,7 +43,7 @@ type Person struct {
 // 			break
 // 		}
 // 	}
-// 	json.NewEncoder(response).Encode(person)
+// 	json.NewEncoder(w).Encode(person)
 	
 
 // }
@@ -67,33 +67,33 @@ func main() {
 
 //Get a singular person on the data base
 
-func GetPersonEndpoint(response http.ResponseWriter, request *http.Request) {
-	response.Header().Set("content-type", "application/json")
-	params := mux.Vars(request)
+func GetPersonEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
+	params := mux.Vars(r)
 	id, _ := primitive.ObjectIDFromHex(params["id"])
 	var person Person
 	collection := client.Database("villagepeople").Collection("people")
 	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
 	err := collection.FindOne(ctx, Person{ID: id}).Decode(&person)
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
-	json.NewEncoder(response).Encode(person)
+	json.NewEncoder(w).Encode(person)
 }
 
 //GetRequest/ all user on the db
-func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
-	response.Header().Set("content-type", "application/json")
+func GetPeopleEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", "application/json")
 	var people []Person
 	collection := client.Database("villagepeople").Collection("people")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	cursor, err := collection.Find(ctx, bson.M{})
 
 	if err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
 
@@ -104,21 +104,21 @@ func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
 		people = append(people, person)
 	}
 	if err := cursor.Err(); err != nil {
-		response.WriteHeader(http.StatusInternalServerError)
-		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(`{ "message": "` + err.Error() + `" }`))
 		return
 	}
-	json.NewEncoder(response).Encode(people)
+	json.NewEncoder(w).Encode(people)
 }
 
 //post/created a user
-func CreatePersonEndpoint(response http.ResponseWriter, request *http.Request) {
-	response.Header().Add("content-type", "application/json")
+func CreatePersonEndpoint(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("content-type", "application/json")
 	var person Person
-	json.NewDecoder(request.Body).Decode(&person)
+	json.NewDecoder(r.Body).Decode(&person)
 	collection := client.Database("villagepeople").Collection("people")
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, _ := collection.InsertOne(ctx, person)
-	json.NewEncoder(response).Encode(result)
+	json.NewEncoder(w).Encode(result)
 
 }
