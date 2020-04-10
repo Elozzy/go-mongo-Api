@@ -27,7 +27,63 @@ type Person struct {
 }
 
 
-//GetRequest
+
+
+//delete person
+// func DeletePersonEndpoint(response http.ResponseWriter, request *http.Request) {
+// 	response.Header().Set("Content-Type", "application/json")
+// 	params := mux.Vars(request)
+// 	id, _ := primitive.ObjectIDFromHex(params["id"])
+// 	var person Person
+// 	collection := client.Database("villagepeople").Collection("people")
+// 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+// 	for index, item := range Person {
+// 		if item.ID == params["id"]{
+// 			person = append(Person[:index], Person[index+1:]...)
+// 			break
+// 		}
+// 	}
+// 	json.NewEncoder(response).Encode(person)
+	
+
+// }
+
+
+func main() {
+	fmt.Println("Starting the application....#######")
+	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	client, _ = mongo.Connect(ctx, clientOptions)
+	router := mux.NewRouter()
+
+	//Endpoints routes
+	router.HandleFunc("/person", CreatePersonEndpoint).Methods("POST")
+	router.HandleFunc("/people", GetPeopleEndpoint).Methods("GET")
+	router.HandleFunc("/person/{id}", GetPersonEndpoint).Methods("GET")
+	//setting port addres
+	log.Fatal(http.ListenAndServe(":5000", router))
+
+}
+
+//Get a singular person on the data base
+
+func GetPersonEndpoint(response http.ResponseWriter, request *http.Request) {
+	response.Header().Set("content-type", "application/json")
+	params := mux.Vars(request)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+	var person Person
+	collection := client.Database("villagepeople").Collection("people")
+	ctx, _ := context.WithTimeout(context.Background(), 30*time.Second)
+	err := collection.FindOne(ctx, Person{ID: id}).Decode(&person)
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		response.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+	json.NewEncoder(response).Encode(person)
+}
+
+//GetRequest/ all user on the db
 func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
 	response.Header().Set("content-type", "application/json")
 	var people []Person
@@ -55,7 +111,7 @@ func GetPeopleEndpoint(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(people)
 }
 
-//post
+//post/created a user
 func CreatePersonEndpoint(response http.ResponseWriter, request *http.Request) {
 	response.Header().Add("content-type", "application/json")
 	var person Person
@@ -64,21 +120,5 @@ func CreatePersonEndpoint(response http.ResponseWriter, request *http.Request) {
 	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
 	result, _ := collection.InsertOne(ctx, person)
 	json.NewEncoder(response).Encode(result)
-
-}
-
-
-func main() {
-	fmt.Println("Starting the application....#######")
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
-	client, _ = mongo.Connect(ctx, clientOptions)
-	router := mux.NewRouter()
-
-	//Endpoints routes
-	router.HandleFunc("/person", CreatePersonEndpoint).Methods("POST")
-	router.HandleFunc("/people", GetPeopleEndpoint).Methods("GET")
-	//setting port addres
-	log.Fatal(http.ListenAndServe(":5000", router))
 
 }
